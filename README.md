@@ -1,2 +1,2 @@
 # DevCollab
-DevCollab – A real-time collaboration platform for developers with chat, tasks, and project management.
+DevCollab – A real-time collaboration platform for developers featuring chat, tasks, and project management using Node.js, MongoDB, and React.
