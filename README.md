@@ -50,6 +50,6 @@ This project is licensed under the MIT License.
 
 ---
 
-## 💼 Autho
+## 💼 Author
 
 Made with ❤️ by Disha Agarwalla
