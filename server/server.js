@@ -6,15 +6,22 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 
-// 🔍 DEBUG (VERY IMPORTANT)
+// 🔍 DEBUG
 console.log("ENV CHECK MONGO_URI:", process.env.MONGO_URI);
 
 const app = express();
 const server = http.createServer(app);
 
+// Allowed frontend origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dev-collab-tan.vercel.app"
+];
+
+// Socket.io
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -22,7 +29,19 @@ const io = new Server(server, {
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      // (Postman, server-to-server, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -45,10 +64,12 @@ app.use("/api/user", require("./routes/userRoutes"));
 
 // Test route
 app.get("/", (req, res) => {
-  res.json({ message: "DevCollab API is running 🚀" });
+  res.json({
+    message: "DevCollab API is running 🚀"
+  });
 });
 
-// Socket.io
+// Socket.io events
 io.on("connection", (socket) => {
   console.log("🔌 New client:", socket.id);
 
