@@ -1,15 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
-import { getNotifications, markNotificationAsRead } from '../api/notifications';
-import toast from 'react-hot-toast';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { io } from "socket.io-client";
+import { getNotifications, markNotificationAsRead } from "../api/notifications";
+import toast from "react-hot-toast";
 
 const NotificationContext = createContext();
 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
+
   if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
+    throw new Error("useNotifications must be used within NotificationProvider");
   }
+
   return context;
 };
 
@@ -20,26 +22,32 @@ export const NotificationProvider = ({ children, user }) => {
 
   const fetchNotifications = async () => {
     if (!user) return;
+
     try {
       const data = await getNotifications();
+
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
     }
   };
 
   const markAsRead = async (notificationId) => {
     try {
       await markNotificationAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(notif =>
-          notif._id === notificationId ? { ...notif, read: true } : notif
+
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif._id === notificationId
+            ? { ...notif, read: true }
+            : notif
         )
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -48,21 +56,27 @@ export const NotificationProvider = ({ children, user }) => {
 
     fetchNotifications();
 
-    const newSocket = io('http://localhost:5000', {
-      transports: ['websocket', 'polling']
+    const SOCKET_URL =
+      import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
+      "http://localhost:5000";
+
+    const newSocket = io(SOCKET_URL, {
+      transports: ["websocket", "polling"]
     });
+
     setSocket(newSocket);
 
-    newSocket.emit('join-user', user._id);
+    newSocket.emit("join-user", user._id);
 
-    newSocket.on('new-notification', (notification) => {
-      console.log('New notification received:', notification);
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-      
+    newSocket.on("new-notification", (notification) => {
+      console.log("New notification received:", notification);
+
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+
       toast.success(notification.title, {
         duration: 4000,
-        position: 'top-right'
+        position: "top-right"
       });
     });
 
